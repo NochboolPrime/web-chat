@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Чат на веб-сокетах</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        #messages { border: 1px solid #ccc; height: 300px; overflow-y: scroll; margin-bottom: 10px; padding: 5px; }
+        #input { width: 80%; }
+    </style>
+</head>
+<body>
+
+<h1>Чат на веб-сокетах</h1>
+<div id="messages"></div>
+<input id="input" type="text" placeholder="Введите сообщение...">
+<button id="sendBtn">Отправить</button>
+
+<script>
+    const ws = new WebSocket('ws://localhost:8080');
+
+    // Обработка входящих сообщений
+    ws.onmessage = (event) => {
+        const messagesDiv = document.getElementById('messages');
+        messagesDiv.innerHTML += `<div>${event.data}</div>`; // Вывод текста сообщения
+        messagesDiv.scrollTop = messagesDiv.scrollHeight; // Прокрутка вниз
+    };
+
+    // Обработка клика по кнопке "Отправить"
+    document.getElementById('sendBtn').onclick = () => {
+        sendMessage();
+    };
+
+    // Обработка нажатия клавиши Enter
+    document.getElementById('input').addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            sendMessage();
+        }
+    });
+
+    // Функция отправки сообщения
+    function sendMessage() {
+        const input = document.getElementById('input');
+        const message = input.value.trim();
+        if (message) {
+            ws.send(message); // Отправка сообщения на сервер
+            input.value = ''; // Очистка поля ввода
+        }
+    }
+</script>
+
+</body>
+</html>
