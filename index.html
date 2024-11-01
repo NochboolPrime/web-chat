@@ -4,10 +4,73 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Чат на веб-сокетах</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: Arial, sans-serif; }
-        #messages { border: 1px solid #ccc; height: 300px; overflow-y: scroll; margin-bottom: 10px; padding: 5px; }
-        #input { width: 80%; }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #4a90e2;
+        }
+
+        #messages {
+            width: 100%;
+            max-width: 600px;
+            height: 400px;
+            overflow-y: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            background-color: white;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        #messages div {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        #messages div:nth-child(odd) {
+            background-color: #e7f3fe; /* Светло-синий фон для нечетных сообщений */
+        }
+
+        #messages div:nth-child(even) {
+            background-color: #d1e7fd; /* Темно-синий фон для четных сообщений */
+        }
+
+        #input {
+            width: calc(100% - 100px);
+            max-width: 500px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+
+        #sendBtn {
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            background-color: #4a90e2; /* Синий фон для кнопки */
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #sendBtn:hover {
+            background-color: #357ab8; /* Темнее при наведении */
+        }
     </style>
 </head>
 <body>
@@ -23,7 +86,12 @@
     // Обработка входящих сообщений
     ws.onmessage = (event) => {
         const messagesDiv = document.getElementById('messages');
-        messagesDiv.innerHTML += `<div>${event.data}</div>`; // Вывод текста сообщения
+        const messageElement = document.createElement('div');
+
+        const timestamp = new Date().toLocaleTimeString();
+        messageElement.innerHTML = `<strong>[${timestamp}]</strong> ${event.data}`;
+        
+        messagesDiv.appendChild(messageElement);
         messagesDiv.scrollTop = messagesDiv.scrollHeight; // Прокрутка вниз
     };
 
@@ -43,8 +111,10 @@
     function sendMessage() {
         const input = document.getElementById('input');
         const message = input.value.trim();
+        
         if (message) {
-            ws.send(message); // Отправка сообщения на сервер
+            const messageObject = { text: message }; // Создаем объект сообщения
+            ws.send(JSON.stringify(messageObject)); // Отправка сообщения на сервер в формате JSON
             input.value = ''; // Очистка поля ввода
         }
     }
