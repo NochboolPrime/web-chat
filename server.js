@@ -27,7 +27,7 @@ wss.on('connection', (ws) => {
 
     ws.on('message', (message) => {
         const messageObject = JSON.parse(message);
-        
+
         if (messageObject.type === 'join') {
             clients.set(ws, messageObject.username); // Сохраняем имя пользователя
             
@@ -43,7 +43,7 @@ wss.on('connection', (ws) => {
             // Выводим сообщение о присоединении в консоль
             console.log(`${messageObject.username} присоединился к чату.`);
         } else {
-            const textMessage = `${clients.get(ws)}: ${messageObject.text}`;
+            const textMessage = `<span style="color:${messageObject.color};">${clients.get(ws)}: ${messageObject.text}</span>`;
             broadcast(textMessage); // Рассылаем сообщение всем клиентам
             
             // Выводим текстовое сообщение в консоль

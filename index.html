@@ -6,6 +6,7 @@
     <title>Чат на веб-сокетах</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        /* Стили остаются прежними */
         body {
             font-family: 'Roboto', sans-serif;
             background-color: #e9ecef;
@@ -32,23 +33,12 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             background-color: white;
             padding: 15px;
-            margin-bottom: 20px;
-            animation: fadeIn 0.5s ease-in-out; /* Анимация появления */
         }
 
         #messages div {
             padding: 10px;
             margin: 5px 0;
             border-radius: 5px;
-            transition: background-color 0.3s ease, transform 0.2s ease; /* Плавный переход */
-        }
-
-        #messages div:nth-child(odd) {
-            background-color: #d1e7fd; /* Светло-синий фон для нечетных сообщений */
-        }
-
-        #messages div:nth-child(even) {
-            background-color: #e7f3fe; /* Темно-синий фон для четных сообщений */
         }
 
         #input {
@@ -60,6 +50,10 @@
             font-size: 16px;
         }
 
+        #colorPicker {
+            margin-right: 10px; /* Отступ между выбором цвета и полем ввода */
+        }
+
         #sendBtn {
             padding: 10px 20px;
             border-radius: 5px;
@@ -67,25 +61,10 @@
             background-color: #007bff; /* Синий фон для кнопки */
             color: white;
             font-size: 16px;
-            cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.2s ease; /* Плавный переход */
         }
 
         #sendBtn:hover {
             background-color: #0056b3; /* Темнее при наведении */
-            transform: scale(1.05); /* Увеличение при наведении */
-        }
-
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-
-        .notification {
-          font-weight: bold;
-          color: #28a745; /* Зеленый цвет для уведомлений */
-          margin-top: 10px;
-          animation: fadeIn .5s ease-in-out; /* Анимация появления уведомлений */
         }
     </style>
 </head>
@@ -94,12 +73,20 @@
 <h1>Чат на веб-сокетах</h1>
 <div id="messages"></div>
 <input id="username" type="text" placeholder="Введите ваше имя..." />
+<select id="colorPicker">
+    <option value="#000000">Чёрный</option>
+    <option value="#ff0000">Красный</option>
+    <option value="#00ff00">Зелёный</option>
+    <option value="#0000ff">Синий</option>
+    <option value="#ffff00">Жёлтый</option>
+</select>
 <input id="input" type="text" placeholder="Введите сообщение..." disabled />
 <button id="sendBtn" disabled>Отправить</button>
 
 <script>
     const ws = new WebSocket('ws://localhost:8080');
     let username = '';
+    let messageColor = '#000000'; // Цвет по умолчанию
 
     // Обработка входящих сообщений
     ws.onmessage = (event) => {
@@ -108,16 +95,8 @@
         
         messageElement.innerHTML = event.data;
 
-        // Добавление класса для уведомлений
-        if (event.data.includes('присоединился') || event.data.includes('нас покинул')) {
-          messageElement.classList.add('notification');
-        }
-
         messagesDiv.appendChild(messageElement);
         messagesDiv.scrollTop = messagesDiv.scrollHeight; // Прокрутка вниз
-
-        // Вывод сообщения в консоль
-        console.log(event.data);
     };
 
     // Обработка клика по кнопке "Отправить"
@@ -138,12 +117,9 @@
         const message = input.value.trim();
         
         if (message) {
-            const messageObject = { username, text: message };
+            const messageObject = { username, text: message, color: messageColor };
             ws.send(JSON.stringify(messageObject));
             input.value = ''; // Очистка поля ввода
-
-            // Вывод отправленного сообщения в консоль
-            console.log(`${username}: ${message}`);
         }
     }
 
@@ -153,14 +129,18 @@
         if (username) {
             document.getElementById('input').disabled = false;
             document.getElementById('sendBtn').disabled = false;
-            ws.send(JSON.stringify({ type: 'join', username }));
 
-            // Вывод имени пользователя в консоль
-            console.log(`${username} присоединился к чату.`);
-        }
-    });
+           ws.send(JSON.stringify({ type: 'join', username }));
+
+           console.log(`${username} присоединился к чату.`);
+       }
+   });
+
+   // Обработка изменения цвета
+   document.getElementById('colorPicker').addEventListener('change', (event) => {
+       messageColor = event.target.value; // Сохранение выбранного цвета
+   });
 </script>
-
 
 </body>
 </html>
