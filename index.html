@@ -115,6 +115,9 @@
 
         messagesDiv.appendChild(messageElement);
         messagesDiv.scrollTop = messagesDiv.scrollHeight; // Прокрутка вниз
+
+        // Вывод сообщения в консоль
+        console.log(event.data);
     };
 
     // Обработка клика по кнопке "Отправить"
@@ -138,6 +141,9 @@
             const messageObject = { username, text: message };
             ws.send(JSON.stringify(messageObject));
             input.value = ''; // Очистка поля ввода
+
+            // Вывод отправленного сообщения в консоль
+            console.log(`${username}: ${message}`);
         }
     }
 
@@ -148,9 +154,13 @@
             document.getElementById('input').disabled = false;
             document.getElementById('sendBtn').disabled = false;
             ws.send(JSON.stringify({ type: 'join', username }));
+
+            // Вывод имени пользователя в консоль
+            console.log(`${username} присоединился к чату.`);
         }
     });
 </script>
+
 
 </body>
 </html>

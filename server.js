@@ -30,6 +30,7 @@ wss.on('connection', (ws) => {
         
         if (messageObject.type === 'join') {
             clients.set(ws, messageObject.username); // Сохраняем имя пользователя
+            
             const welcomeMessage = clients.size === 1 
                 ? `Добро пожаловать. Вы первый в чате.` 
                 : `Добро пожаловать. В чате уже присутствуют: ${Array.from(clients.values()).join(', ')}`;
@@ -38,16 +39,26 @@ wss.on('connection', (ws) => {
             
             // Уведомляем остальных о новом пользователе
             broadcast(`${messageObject.username} к нам присоединился.`);
+            
+            // Выводим сообщение о присоединении в консоль
+            console.log(`${messageObject.username} присоединился к чату.`);
         } else {
             const textMessage = `${clients.get(ws)}: ${messageObject.text}`;
             broadcast(textMessage); // Рассылаем сообщение всем клиентам
+            
+            // Выводим текстовое сообщение в консоль
+            console.log(textMessage);
         }
     });
 
     ws.on('close', () => {
         const username = clients.get(ws);
         clients.delete(ws); // Удаляем клиента из списка
+        
         broadcast(`${username} нас покинул.`); // Уведомляем остальных о выходе пользователя
+        
+        // Выводим сообщение о выходе в консоль
+        console.log(`${username} покинул чат.`);
     });
 });
 
