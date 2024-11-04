@@ -8,8 +8,8 @@
     <style>
         body {
             font-family: 'Roboto', sans-serif;
-            background-color: #f4f4f9;
-            color: #333;
+            background-color: #e9ecef;
+            color: #343a40;
             margin: 0;
             padding: 20px;
             display: flex;
@@ -18,7 +18,9 @@
         }
 
         h1 {
-            color: #4a90e2;
+            color: #007bff;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
         }
 
         #messages {
@@ -26,34 +28,35 @@
             max-width: 600px;
             height: 400px;
             overflow-y: auto;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             background-color: white;
-            padding: 10px;
+            padding: 15px;
             margin-bottom: 20px;
+            animation: fadeIn 0.5s ease-in-out; /* Анимация появления */
         }
 
         #messages div {
             padding: 10px;
             margin: 5px 0;
             border-radius: 5px;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s ease, transform 0.2s ease; /* Плавный переход */
         }
 
         #messages div:nth-child(odd) {
-            background-color: #e7f3fe; /* Светло-синий фон для нечетных сообщений */
+            background-color: #d1e7fd; /* Светло-синий фон для нечетных сообщений */
         }
 
         #messages div:nth-child(even) {
-            background-color: #d1e7fd; /* Темно-синий фон для четных сообщений */
+            background-color: #e7f3fe; /* Темно-синий фон для четных сообщений */
         }
 
         #input {
-            width: calc(100% - 100px);
+            width: calc(100% - 120px);
             max-width: 500px;
             padding: 10px;
             border-radius: 5px;
-            border: 1px solid #ccc;
+            border: 1px solid #ced4da;
             font-size: 16px;
         }
 
@@ -61,15 +64,28 @@
             padding: 10px 20px;
             border-radius: 5px;
             border: none;
-            background-color: #4a90e2; /* Синий фон для кнопки */
+            background-color: #007bff; /* Синий фон для кнопки */
             color: white;
             font-size: 16px;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s ease, transform 0.2s ease; /* Плавный переход */
         }
 
         #sendBtn:hover {
-            background-color: #357ab8; /* Темнее при наведении */
+            background-color: #0056b3; /* Темнее при наведении */
+            transform: scale(1.05); /* Увеличение при наведении */
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        .notification {
+          font-weight: bold;
+          color: #28a745; /* Зеленый цвет для уведомлений */
+          margin-top: 10px;
+          animation: fadeIn .5s ease-in-out; /* Анимация появления уведомлений */
         }
     </style>
 </head>
@@ -77,20 +93,26 @@
 
 <h1>Чат на веб-сокетах</h1>
 <div id="messages"></div>
-<input id="input" type="text" placeholder="Введите сообщение...">
-<button id="sendBtn">Отправить</button>
+<input id="username" type="text" placeholder="Введите ваше имя..." />
+<input id="input" type="text" placeholder="Введите сообщение..." disabled />
+<button id="sendBtn" disabled>Отправить</button>
 
 <script>
     const ws = new WebSocket('ws://localhost:8080');
+    let username = '';
 
     // Обработка входящих сообщений
     ws.onmessage = (event) => {
         const messagesDiv = document.getElementById('messages');
         const messageElement = document.createElement('div');
-
-        const timestamp = new Date().toLocaleTimeString();
-        messageElement.innerHTML = `<strong>[${timestamp}]</strong> ${event.data}`;
         
+        messageElement.innerHTML = event.data;
+
+        // Добавление класса для уведомлений
+        if (event.data.includes('присоединился') || event.data.includes('нас покинул')) {
+          messageElement.classList.add('notification');
+        }
+
         messagesDiv.appendChild(messageElement);
         messagesDiv.scrollTop = messagesDiv.scrollHeight; // Прокрутка вниз
     };
@@ -113,11 +135,21 @@
         const message = input.value.trim();
         
         if (message) {
-            const messageObject = { text: message }; // Создаем объект сообщения
-            ws.send(JSON.stringify(messageObject)); // Отправка сообщения на сервер в формате JSON
+            const messageObject = { username, text: message };
+            ws.send(JSON.stringify(messageObject));
             input.value = ''; // Очистка поля ввода
         }
     }
+
+    // Установка имени пользователя
+    document.getElementById('username').addEventListener('change', (event) => {
+        username = event.target.value.trim();
+        if (username) {
+            document.getElementById('input').disabled = false;
+            document.getElementById('sendBtn').disabled = false;
+            ws.send(JSON.stringify({ type: 'join', username }));
+        }
+    });
 </script>
 
 </body>

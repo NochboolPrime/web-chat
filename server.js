@@ -3,9 +3,7 @@ const WebSocket = require('ws');
 const path = require('path');
 const fs = require('fs');
 
-// Создаем HTTP-сервер
 const server = http.createServer((req, res) => {
-    // Обслуживание статической HTML-страницы
     if (req.url === '/') {
         fs.readFile(path.join(__dirname, 'index.html'), (err, data) => {
             if (err) {
@@ -21,36 +19,48 @@ const server = http.createServer((req, res) => {
     }
 });
 
-// Создаем WebSocket-сервер
 const wss = new WebSocket.Server({ server });
+const clients = new Map(); // Хранение подключенных клиентов
 
 wss.on('connection', (ws) => {
     console.log('Новый клиент подключен');
 
     ws.on('message', (message) => {
-        // Парсим сообщение из JSON
         const messageObject = JSON.parse(message);
         
-        // Извлекаем текст сообщения
-        const textMessage = messageObject.text;
-
-        // Выводим текстовое сообщение в консоль
-        console.log(`Получено сообщение: ${textMessage}`);
-        
-        // Рассылаем текстовое сообщение всем клиентам
-        wss.clients.forEach((client) => {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(textMessage); // Отправляем только текст сообщения всем подключенным клиентам
-            }
-        });
+        if (messageObject.type === 'join') {
+            clients.set(ws, messageObject.username); // Сохраняем имя пользователя
+            const welcomeMessage = clients.size === 1 
+                ? `Добро пожаловать. Вы первый в чате.` 
+                : `Добро пожаловать. В чате уже присутствуют: ${Array.from(clients.values()).join(', ')}`;
+            
+            ws.send(welcomeMessage); // Отправляем приветственное сообщение новому пользователю
+            
+            // Уведомляем остальных о новом пользователе
+            broadcast(`${messageObject.username} к нам присоединился.`);
+        } else {
+            const textMessage = `${clients.get(ws)}: ${messageObject.text}`;
+            broadcast(textMessage); // Рассылаем сообщение всем клиентам
+        }
     });
 
     ws.on('close', () => {
-        console.log('Клиент отключился');
+        const username = clients.get(ws);
+        clients.delete(ws); // Удаляем клиента из списка
+        broadcast(`${username} нас покинул.`); // Уведомляем остальных о выходе пользователя
     });
 });
 
-// Запускаем сервер на порту 8080
+// Функция для рассылки сообщений всем подключенным клиентам
+function broadcast(data) {
+    wss.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(data);
+        }
+    });
+}
+
+// Запуск сервера на порту 8080
 server.listen(8080, () => {
     console.log('Сервер запущен на http://localhost:8080');
 });
