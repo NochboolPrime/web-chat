@@ -6,7 +6,6 @@
     <title>Чат на веб-сокетах</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* Стили остаются прежними */
         body {
             font-family: 'Roboto', sans-serif;
             background-color: #e9ecef;
@@ -73,13 +72,7 @@
 <h1>Чат на веб-сокетах</h1>
 <div id="messages"></div>
 <input id="username" type="text" placeholder="Введите ваше имя..." />
-<select id="colorPicker">
-    <option value="#000000">Чёрный</option>
-    <option value="#ff0000">Красный</option>
-    <option value="#00ff00">Зелёный</option>
-    <option value="#0000ff">Синий</option>
-    <option value="#ffff00">Жёлтый</option>
-</select>
+<input type="color" id="colorPicker" value="#000000"> <!-- Цветовая палитра -->
 <input id="input" type="text" placeholder="Введите сообщение..." disabled />
 <button id="sendBtn" disabled>Отправить</button>
 
@@ -137,7 +130,7 @@
    });
 
    // Обработка изменения цвета
-   document.getElementById('colorPicker').addEventListener('change', (event) => {
+   document.getElementById('colorPicker').addEventListener('input', (event) => {
        messageColor = event.target.value; // Сохранение выбранного цвета
    });
 </script>
