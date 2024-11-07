@@ -23,9 +23,37 @@
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
         }
 
+        .chat-container {
+            display: flex; /* Flexbox for layout */
+            width: 100%; /* Full width */
+        }
+
+        #userList {
+            width: 150px; /* Width for user list */
+            margin-right: 20px; /* Space between user list and messages */
+            background-color: #f8f9fa; /* Light background */
+            border-radius: 10px; /* Rounded corners */
+            padding: 10px; /* Padding inside the user list */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Light shadow */
+        }
+
+        #users {
+            list-style-type: none; /* Remove default bullets */
+            padding: 0; /* Remove default padding */
+        }
+
+        #users li {
+            padding: 5px; /* Padding for each user */
+            border-bottom: 1px solid #dee2e6; /* Separator line */
+        }
+
+        #users li:last-child {
+            border-bottom: none; /* Remove border from last item */
+        }
+
         #messages {
-            width: 100%;
-            max-width: 600px;
+            flex-grow: 1; /* Allow messages to take remaining space */
+            max-width: calc(100% - 170px); /* Adjusted max-width based on user list width */
             height: 400px;
             overflow-y: auto;
             border-radius: 10px;
@@ -34,104 +62,146 @@
             padding: 15px;
         }
 
-        #messages div {
-            padding: 10px;
-            margin: 5px 0;
-            border-radius: 5px;
-        }
+        .message {
+           padding: 10px;
+           margin: 5px 0;
+           border-radius: 5px;
+       }
 
-        #input {
-            width: calc(100% - 120px);
-            max-width: 500px;
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #ced4da;
-            font-size: 16px;
-        }
+       .message span {
+           font-weight: bold; /* Bold username */
+       }
 
-        #colorPicker {
-            margin-right: 10px; /* Отступ между выбором цвета и полем ввода */
-        }
+       .message .timestamp {
+           font-size: small; /* Smaller font for timestamp */
+           color: gray; /* Gray color for timestamp */
+           margin-left: 10px; /* Space between message and timestamp */
+       }
 
-        #sendBtn {
-            padding: 10px 20px;
-            border-radius: 5px;
-            border: none;
-            background-color: #007bff; /* Синий фон для кнопки */
-            color: white;
-            font-size: 16px;
-        }
+       #input {
+           width: calc(100% - 120px);
+           max-width: 500px;
+           padding: 10px;
+           border-radius: 5px;
+           border: 1px solid #ced4da;
+           font-size: 16px;
+       }
 
-        #sendBtn:hover {
-            background-color: #0056b3; /* Темнее при наведении */
-        }
-    </style>
+       #colorPicker {
+           margin-right: 10px; /* Space between color picker and input field */
+       }
+
+       #sendBtn {
+           padding: 10px 20px;
+           border-radius: 5px;
+           border: none;
+           background-color: #007bff; /* Blue button background */
+           color: white;
+           font-size: 16px;
+       }
+
+       #sendBtn:hover {
+          background-color: #0056b3; /* Darker shade on hover */
+      }
+   </style>
 </head>
 <body>
 
 <h1>Чат на веб-сокетах</h1>
-<div id="messages"></div>
+<div class="chat-container">
+   <div id="userList">
+       <h2>Пользователи</h2>
+       <ul id="users"></ul>
+   </div>
+   <div id="messages"></div>
+</div>
 <input id="username" type="text" placeholder="Введите ваше имя..." />
-<input type="color" id="colorPicker" value="#000000"> <!-- Цветовая палитра -->
+<input type="color" id="colorPicker" value="#000000"> <!-- Color picker -->
 <input id="input" type="text" placeholder="Введите сообщение..." disabled />
 <button id="sendBtn" disabled>Отправить</button>
 
 <script>
-    const ws = new WebSocket('ws://localhost:8080');
-    let username = '';
-    let messageColor = '#000000'; // Цвет по умолчанию
+   const ws = new WebSocket('ws://localhost:8080');
+   let username = '';
+   let messageColor = '#000000'; // Default color
 
-    // Обработка входящих сообщений
-    ws.onmessage = (event) => {
-        const messagesDiv = document.getElementById('messages');
-        const messageElement = document.createElement('div');
-        
-        messageElement.innerHTML = event.data;
+   // Handling incoming messages
+   ws.onmessage = (event) => {
+       const messagesDiv = document.getElementById('messages');
+       
+       const messageObject = JSON.parse(event.data);
+       
+       if (messageObject.type === 'userList') {
+           updateUserList(messageObject.users); // Update user list
+       } else { 
+           const messageElement = document.createElement('div');
+           const timestamp = new Date().toLocaleTimeString(); // Get current time
+           
+           // Create a formatted message with username and timestamp
+           messageElement.innerHTML = `
+               <div class="message" style="color:${messageObject.color};">
+                   <span>${messageObject.username}</span>: ${messageObject.text}
+                   <span class="timestamp">(${timestamp})</span>
+               </div>`;
+           
+           messagesDiv.appendChild(messageElement);
+           messagesDiv.scrollTop = messagesDiv.scrollHeight; // Scroll to bottom
+       }
+   };
 
-        messagesDiv.appendChild(messageElement);
-        messagesDiv.scrollTop = messagesDiv.scrollHeight; // Прокрутка вниз
-    };
+   // Function to update the user list
+   function updateUserList(users) {
+       const usersList = document.getElementById('users');
+       usersList.innerHTML = ''; // Clear current list
 
-    // Обработка клика по кнопке "Отправить"
-    document.getElementById('sendBtn').onclick = () => {
-        sendMessage();
-    };
+       users.forEach((username) => {
+           const li = document.createElement('li');
+           li.textContent = username;
+           usersList.appendChild(li);
+       });
+   }
 
-    // Обработка нажатия клавиши Enter
-    document.getElementById('input').addEventListener('keydown', (event) => {
-        if (event.key === 'Enter') {
-            sendMessage();
-        }
-    });
+   // Handling click on "Send" button
+   document.getElementById('sendBtn').onclick = () => {
+       sendMessage();
+   };
 
-    // Функция отправки сообщения
-    function sendMessage() {
-        const input = document.getElementById('input');
-        const message = input.value.trim();
-        
-        if (message) {
-            const messageObject = { username, text: message, color: messageColor };
-            ws.send(JSON.stringify(messageObject));
-            input.value = ''; // Очистка поля ввода
-        }
-    }
-
-    // Установка имени пользователя
-    document.getElementById('username').addEventListener('change', (event) => {
-        username = event.target.value.trim();
-        if (username) {
-            document.getElementById('input').disabled = false;
-            document.getElementById('sendBtn').disabled = false;
-
-           ws.send(JSON.stringify({ type: 'join', username }));
-
-           console.log(`${username} присоединился к чату.`);
+   // Handling Enter key press
+   document.getElementById('input').addEventListener('keydown', (event) => {
+       if (event.key === 'Enter') {
+           sendMessage();
        }
    });
 
-   // Обработка изменения цвета
+   // Function to send a message
+   function sendMessage() {
+       const input = document.getElementById('input');
+       const message = input.value.trim();
+       
+       if (message) {
+           const messageObject = { username, text: message, color: messageColor };
+           ws.send(JSON.stringify(messageObject));
+           input.value = ''; // Clear input field
+       }
+   }
+
+   // Setting username
+   document.getElementById('username').addEventListener('change', (event) => {
+       username = event.target.value.trim();
+       
+       if (username) {
+           document.getElementById('input').disabled = false;
+           document.getElementById('sendBtn').disabled = false;
+
+           ws.send(JSON.stringify({ type: 'join', username }));
+           
+          console.log(`${username} присоединился к чату.`);
+      }
+   });
+
+   // Handling color change
    document.getElementById('colorPicker').addEventListener('input', (event) => {
-       messageColor = event.target.value; // Сохранение выбранного цвета
+       messageColor = event.target.value; // Save selected color
    });
 </script>
 
