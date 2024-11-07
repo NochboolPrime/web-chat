@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+\<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -29,7 +29,7 @@
         }
 
         #userList {
-            width: 150px; /* Width for user list */
+            width: 200px; /* Increased width for user list */
             margin-right: 20px; /* Space between user list and messages */
             background-color: #f8f9fa; /* Light background */
             border-radius: 10px; /* Rounded corners */
@@ -43,8 +43,11 @@
         }
 
         #users li {
-            padding: 5px; /* Padding for each user */
+            padding: 10px; /* Padding for each user */
             border-bottom: 1px solid #dee2e6; /* Separator line */
+            display: flex; /* Flexbox for button alignment */
+            justify-content: space-between; /* Space between username and button */
+            align-items: center; /* Center items vertically */
         }
 
         #users li:last-child {
@@ -53,7 +56,7 @@
 
         #messages {
             flex-grow: 1; /* Allow messages to take remaining space */
-            max-width: calc(100% - 170px); /* Adjusted max-width based on user list width */
+            max-width: calc(100% - 220px); /* Adjusted max-width based on user list width */
             height: 400px;
             overflow-y: auto;
             border-radius: 10px;
@@ -66,7 +69,9 @@
            padding: 10px;
            margin: 5px 0;
            border-radius: 5px;
-       }
+           background-color: #f1f1f1; /* Light background for messages */
+           position: relative; /* For timestamp positioning */
+        }
 
        .message span {
            font-weight: bold; /* Bold username */
@@ -76,6 +81,9 @@
            font-size: small; /* Smaller font for timestamp */
            color: gray; /* Gray color for timestamp */
            margin-left: 10px; /* Space between message and timestamp */
+           position: absolute; /* Positioning for better layout */
+           right: 10px; /* Align to the right */
+           bottom: 5px; /* Align to the bottom of the message box */
        }
 
        #input {
@@ -102,6 +110,21 @@
 
        #sendBtn:hover {
           background-color: #0056b3; /* Darker shade on hover */
+      }
+     
+      .privateMessageButton {
+          padding-left: 5px; 
+          padding-right :5px ; 
+          border : none ; 
+          background-color : #007bff ; 
+          color : white ; 
+          border-radius :5 px ; 
+          cursor : pointer ; 
+          font-size :14 px ; 
+      }
+     
+      .privateMessageButton:hover {
+          background-color :#0056b3 ; 
       }
    </style>
 </head>
@@ -156,9 +179,48 @@
 
        users.forEach((username) => {
            const li = document.createElement('li');
+           
            li.textContent = username;
+
+           // Create a button for sending a private message
+           const pmButton = document.createElement('button');
+           pmButton.textContent = 'Личное сообщение';
+           pmButton.className = 'privateMessageButton'; // Add class for styling
+           
+           pmButton.onclick = () => openPrivateChat(username);
+
+           li.appendChild(pmButton); // Append button next to username
+           
            usersList.appendChild(li);
        });
+   }
+
+   function openPrivateChat(targetUsername) {
+       const privateInputContainer = document.createElement('div');
+       privateInputContainer.innerHTML = `
+           <input type="text" placeholder="Введите личное сообщение для ${targetUsername}" />
+           <button>Отправить</button>
+       `;
+       
+       document.body.appendChild(privateInputContainer);
+
+       privateInputContainer.querySelector('button').onclick = () => {
+           const inputField = privateInputContainer.querySelector('input');
+           const privateMessageText = inputField.value.trim();
+
+           if (privateMessageText) {
+               const privateMessageObject = { 
+                   type:'privateMessage', 
+                   text : privateMessageText,
+                   from : username,
+                   to : targetUsername,
+                   color : messageColor 
+               };
+               ws.send(JSON.stringify(privateMessageObject));
+               inputField.value = ''; // Clear input field after sending
+               document.body.removeChild(privateInputContainer); // Close chat after sending
+          }
+      };
    }
 
    // Handling click on "Send" button
@@ -169,39 +231,39 @@
    // Handling Enter key press
    document.getElementById('input').addEventListener('keydown', (event) => {
        if (event.key === 'Enter') {
-           sendMessage();
-       }
+          sendMessage();
+      }
    });
 
    // Function to send a message
    function sendMessage() {
-       const input = document.getElementById('input');
-       const message = input.value.trim();
-       
-       if (message) {
-           const messageObject = { username, text: message, color: messageColor };
-           ws.send(JSON.stringify(messageObject));
-           input.value = ''; // Clear input field
-       }
+      const input = document.getElementById('input');
+      const message = input.value.trim();
+      
+      if (message) {
+          const messageObject = { username, text : message , color : messageColor };
+          ws.send(JSON.stringify(messageObject));
+          input.value = ''; // Clear input field
+      }
    }
 
    // Setting username
    document.getElementById('username').addEventListener('change', (event) => {
-       username = event.target.value.trim();
-       
-       if (username) {
-           document.getElementById('input').disabled = false;
-           document.getElementById('sendBtn').disabled = false;
+      username = event.target.value.trim();
+      
+      if (username) {
+          document.getElementById('input').disabled = false;
+          document.getElementById('sendBtn').disabled = false;
 
-           ws.send(JSON.stringify({ type: 'join', username }));
-           
+          ws.send(JSON.stringify({ type : 'join' , username }));
+         
           console.log(`${username} присоединился к чату.`);
       }
    });
 
    // Handling color change
    document.getElementById('colorPicker').addEventListener('input', (event) => {
-       messageColor = event.target.value; // Save selected color
+      messageColor = event.target.value; // Save selected color
    });
 </script>
 

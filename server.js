@@ -34,8 +34,6 @@ wss.on('connection', (ws) => {
             const welcomeMessage = clients.size === 1 
                 ? `Добро пожаловать. Вы первый в чате.` 
                 : `Добро пожаловать. В чате уже присутствуют: ${Array.from(clients.values()).join(', ')}`;
-
-                
             
             // Send welcome message to new user
             ws.send(JSON.stringify({ text: welcomeMessage })); 
@@ -44,17 +42,21 @@ wss.on('connection', (ws) => {
             const joinMessage = `${messageObject.username} к нам присоединился.`;
             broadcast(joinMessage); // Broadcast join message to all clients
             
-            
-            // Send join message as a system message
-            const systemMessage = JSON.stringify({
-                username: "Система", // System username
-                text: joinMessage,
-                color: "#007bff" // Optional: Color for system messages
-            });
-            broadcast(systemMessage); // Send to all clients
-            
+            ws.send(JSON.stringify({ text: joinMessage })); 
             // Send updated user list to all clients
             broadcastUserList();
+        } else if (messageObject.type === 'privateMessage') {
+            // Send private message to specific user
+            for (const [clientWs, clientUsername] of clients.entries()) {
+                if (clientUsername === messageObject.to) {
+                    clientWs.send(JSON.stringify({
+                        username: messageObject.from,
+                        text: messageObject.text,
+                        color: messageObject.color,
+                    }));
+                    break; // Exit loop after sending the message
+                }
+            }
         } else { 
             const textMessage = JSON.stringify({
                 username: clients.get(ws),
