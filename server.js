@@ -20,7 +20,7 @@ const server = http.createServer((req, res) => {
 });
 
 const wss = new WebSocket.Server({ server });
-const clients = new Map(); // Store connected clients
+const clients = new Map(); 
 
 wss.on('connection', (ws) => {
     console.log('Новый клиент подключен');
@@ -29,24 +29,24 @@ wss.on('connection', (ws) => {
         const messageObject = JSON.parse(message);
 
         if (messageObject.type === 'join') {
-            clients.set(ws, messageObject.username); // Store username
+            clients.set(ws, messageObject.username); 
             
             const welcomeMessage = clients.size === 1 
                 ? `Добро пожаловать. Вы первый в чате.` 
                 : `Добро пожаловать. В чате уже присутствуют: ${Array.from(clients.values()).join(', ')}`;
             
-            // Send welcome message to new user
+
             ws.send(JSON.stringify({ text: welcomeMessage })); 
             
-            // Notify others about the new user
+     
             const joinMessage = `${messageObject.username} к нам присоединился.`;
-            broadcast(joinMessage); // Broadcast join message to all clients
+            broadcast(joinMessage); 
             
             ws.send(JSON.stringify({ text: joinMessage })); 
-            // Send updated user list to all clients
+            
             broadcastUserList();
         } else if (messageObject.type === 'privateMessage') {
-            // Send private message to specific user
+            
             for (const [clientWs, clientUsername] of clients.entries()) {
                 if (clientUsername === messageObject.to) {
                     clientWs.send(JSON.stringify({
@@ -54,7 +54,7 @@ wss.on('connection', (ws) => {
                         text: messageObject.text,
                         color: messageObject.color,
                     }));
-                    break; // Exit loop after sending the message
+                    break; 
                 }
             }
         } else { 
@@ -63,26 +63,26 @@ wss.on('connection', (ws) => {
                 text: messageObject.text,
                 color: messageObject.color,
             });
-            broadcast(textMessage); // Broadcast message to all clients
+            broadcast(textMessage); 
             
-            console.log(textMessage); // Log sent messages
+            console.log(textMessage);
         }
     });
 
     ws.on('close', () => {
         const username = clients.get(ws);
-        clients.delete(ws); // Remove client from list
+        clients.delete(ws); 
         
-        const leaveMessage = `${username} нас покинул.`; // Message for leaving user
-        broadcast(leaveMessage); // Notify others about user's exit
+        const leaveMessage = `${username} нас покинул.`; 
+        broadcast(leaveMessage); 
         
-        console.log(leaveMessage); // Log exit messages
+        console.log(leaveMessage); 
         
-        broadcastUserList(); // Send updated user list to all clients
+        broadcastUserList(); 
     });
 });
 
-// Function to broadcast messages to all connected clients
+
 function broadcast(data) {
     wss.clients.forEach((client) => {
          if (client.readyState === WebSocket.OPEN) {
@@ -91,7 +91,7 @@ function broadcast(data) {
      });
 }
 
-// Function to send user list to all connected clients
+
 function broadcastUserList() {
      const userListMessage = JSON.stringify({
          type: 'userList',
@@ -101,7 +101,7 @@ function broadcastUserList() {
      broadcast(userListMessage);
 }
 
-// Start server on port 8080
+
 server.listen(8080, () => {
      console.log('Сервер запущен на http://localhost:8080');
 });
