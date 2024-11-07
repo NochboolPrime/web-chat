@@ -43,6 +43,8 @@ wss.on('connection', (ws) => {
             broadcast(joinMessage); // Broadcast join message to all clients
             
             console.log(joinMessage); // Log to console
+
+            ws.send(JSON.stringify({ text: joinMessage })); 
             
             // Send updated user list to all clients
             broadcastUserList();
@@ -66,6 +68,8 @@ wss.on('connection', (ws) => {
         broadcast(leaveMessage); // Notify others about user's exit
         
         console.log(leaveMessage); // Log exit messages
+
+        ws.send(JSON.stringify({ text: leaveMessage })); 
         
         broadcastUserList(); // Send updated user list to all clients
     });
